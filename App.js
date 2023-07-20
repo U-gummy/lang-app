@@ -1,21 +1,33 @@
-import { StatusBar } from 'expo-status-bar';
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { useState, useEffect } from "react";
+import styled from "styled-components/native";
+
+const Container = styled.View`
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+`;
+const Box = styled.TouchableOpacity`
+  width: 200px;
+  height: 200px;
+  background: tomato;
+`;
 
 export default function App() {
+  const [y, setY] = useState(0);
+  const [intervalId, setIntervalId] = useState(null);
+  const moveUp = () => {
+    const id = setInterval(() => setY((prev) => prev + 1), 1);
+    setIntervalId(id);
+  };
+  useEffect(() => {
+    if (y === 200) {
+      clearInterval(intervalId);
+    }
+  }, [y, intervalId]);
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <Container>
+      <Box onPress={moveUp} style={{ transform: [{ translateY: y }] }} />
+    </Container>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

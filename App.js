@@ -3,6 +3,7 @@ import {
   Animated,
   Dimensions,
   Easing,
+  PanResponder,
   Pressable,
   TouchableOpacity,
 } from "react-native";
@@ -20,37 +21,13 @@ const Box = styled.View`
 `;
 const AnimatedBox = Animated.createAnimatedComponent(Box);
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
-
 export default function App() {
-  const [up, setUp] = useState(false);
   const position = useRef(
     new Animated.ValueXY({
-      x: -SCREEN_WIDTH / 2 + 100,
-      y: -SCREEN_HEIGHT / 2 + 100,
+      x: 0,
+      y: 0,
     })
   ).current;
-  const topLeft = Animated.timing(position, {
-    toValue: { x: -SCREEN_WIDTH / 2 + 100, y: -SCREEN_HEIGHT / 2 + 100 },
-    useNativeDriver: false,
-  });
-  const bottomLeft = Animated.timing(position, {
-    toValue: { x: -SCREEN_WIDTH / 2 + 100, y: SCREEN_HEIGHT / 2 - 100 },
-    useNativeDriver: false,
-  });
-  const bottomRight = Animated.timing(position, {
-    toValue: { x: SCREEN_WIDTH / 2 - 100, y: SCREEN_HEIGHT / 2 - 100 },
-    useNativeDriver: false,
-  });
-  const topRight = Animated.timing(position, {
-    toValue: { x: SCREEN_WIDTH / 2 - 100, y: -SCREEN_HEIGHT / 2 + 100 },
-    useNativeDriver: false,
-  });
-  const moveUp = () => {
-    Animated.loop(
-      Animated.sequence([bottomLeft, bottomRight, topRight, topLeft])
-    ).start();
-  };
 
   const borderRadius = position.y.interpolate({
     inputRange: [-200, 200],
@@ -60,17 +37,29 @@ export default function App() {
     inputRange: [-200, 200],
     outputRange: ["rgb(255,99,71)", "rgb(255,100,200)"],
   });
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderMove: (_, { dx, dy }) => {
+        console.log(dx, dy);
+        position.setValue({
+          x: dx,
+          y: dy,
+        });
+      },
+    })
+  ).current;
+
   return (
     <Container>
-      <Pressable onPress={moveUp}>
-        <AnimatedBox
-          style={{
-            borderRadius,
-            backgroundColor,
-            transform: [...position.getTranslateTransform()],
-          }}
-        />
-      </Pressable>
+      <AnimatedBox
+        {...panResponder.panHandlers}
+        style={{
+          borderRadius,
+          backgroundColor,
+          transform: [...position.getTranslateTransform()],
+        }}
+      />
     </Container>
   );
 }

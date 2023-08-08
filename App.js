@@ -41,11 +41,16 @@ export default function App() {
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onPanResponderMove: (_, { dx, dy }) => {
-        console.log(dx, dy);
         position.setValue({
           x: dx,
           y: dy,
         });
+      },
+      onPanResponderRelease: () => {
+        Animated.spring(position, {
+          toValue: { x: 0, y: 0 },
+          useNativeDriver: false,
+        }).start();
       },
     })
   ).current;
@@ -57,7 +62,7 @@ export default function App() {
         style={{
           borderRadius,
           backgroundColor,
-          transform: [...position.getTranslateTransform()],
+          transform: position.getTranslateTransform(),
         }}
       />
     </Container>

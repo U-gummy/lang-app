@@ -22,35 +22,49 @@ const Box = styled.View`
 const AnimatedBox = Animated.createAnimatedComponent(Box);
 
 export default function App() {
-  const position = useRef(
-    new Animated.ValueXY({
-      x: 0,
-      y: 0,
-    })
-  ).current;
+  // Values
+  const scale = useRef(new Animated.Value(1)).current;
+  const position = useRef(new Animated.Value(0)).current;
+  const rotation = position.interpolate({
+    inputRange: [-250, 250],
+    outputRange: ["-15deg", "15deg"],
+  });
 
-  const borderRadius = position.y.interpolate({
-    inputRange: [-200, 200],
-    outputRange: [100, 0],
+  // Animation
+  const onPressOut = Animated.spring(scale, {
+    toValue: 1,
+    useNativeDriver: true,
   });
-  const backgroundColor = position.y.interpolate({
-    inputRange: [-200, 200],
-    outputRange: ["rgb(255,99,71)", "rgb(255,100,200)"],
+  const onPressIn = Animated.spring(scale, {
+    toValue: 0.95,
+    useNativeDriver: true,
   });
+  const goCenter = Animated.spring(position, {
+    toValue: 0,
+    useNativeDriver: true,
+  });
+
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
-      onPanResponderMove: (_, { dx, dy }) => {
-        position.setValue({
-          x: dx,
-          y: dy,
-        });
+      onPanResponderMove: (_, { dx }) => {
+        position.setValue(dx);
       },
-      onPanResponderRelease: () => {
-        Animated.spring(position, {
-          toValue: { x: 0, y: 0 },
-          useNativeDriver: false,
-        }).start();
+      onPanResponderGrant: () => onPressIn.start(),
+      onPanResponderRelease: (_, { dx }) => {
+        if (dx < -230) {
+          Animated.spring(position, {
+            toValue: -500,
+            useNativeDriver: true,
+          }).start();
+        } else if (dx > 230) {
+          Animated.spring(position, {
+            toValue: 500,
+            useNativeDriver: true,
+          }).start();
+        } else {
+          Animated.parallel([onPressOut, goCenter]).start();
+        }
       },
     })
   ).current;
@@ -60,9 +74,11 @@ export default function App() {
       <AnimatedBox
         {...panResponder.panHandlers}
         style={{
-          borderRadius,
-          backgroundColor,
-          transform: position.getTranslateTransform(),
+          transform: [
+            { scale },
+            { translateX: position },
+            { rotateZ: rotation },
+          ],
         }}
       />
     </Container>
